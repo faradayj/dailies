@@ -4,391 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NYT Games Companion</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-base: #0b0f19;
-            --bg-sidebar: #0f172a;
-            --bg-card: rgba(30, 41, 59, 0.45);
-            --bg-card-hover: rgba(30, 41, 59, 0.65);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            
-            /* Game specific colors */
-            --wordle-green: #6aaa64;
-            --wordle-yellow: #c9b458;
-            --wordle-grey: #787c7e;
-            
-            --accent-primary: var(--wordle-green);
-            --accent-glow: rgba(106, 170, 100, 0.15);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-base);
-            color: var(--text-primary);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            background-image: radial-gradient(circle at 50% 0%, var(--accent-glow) 0%, rgba(11, 15, 25, 0) 75%);
-            transition: background-image 0.3s ease;
-        }
-
-        /* --- Sidebar Navigation --- */
-        .sidebar {
-            width: 320px;
-            background-color: var(--bg-sidebar);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            flex-shrink: 0;
-            z-index: 10;
-        }
-
-        .sidebar-header {
-            padding: 24px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .hub-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            width: 100%;
-            padding: 10px 14px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            margin-bottom: 16px;
-        }
-
-        .hub-btn:hover {
-            background: rgba(255, 255, 255, 0.07);
-            color: var(--text-primary);
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 12px var(--accent-glow);
-            transform: translateY(-1px);
-        }
-
-        .hub-btn-icon {
-            font-size: 1.1rem;
-        }
-
-        .sidebar-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .game-select-container {
-            position: relative;
-            width: 100%;
-        }
-
-        .game-select {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px 16px;
-            color: var(--text-primary);
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 600;
-            outline: none;
-            cursor: pointer;
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239ca3af'%3E%3Cpath d='M7 10l5 5 5-5H7z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 16px;
-            transition: all 0.2s ease;
-        }
-
-        .game-select:focus, .game-select:hover {
-            background-color: rgba(255, 255, 255, 0.08);
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 12px var(--accent-glow);
-        }
-
-        .game-select option {
-            background-color: #0f172a;
-            color: #ffffff;
-        }
-
-        /* --- Sidebar Controls Panel --- */
-        .sidebar-panel {
-            flex-grow: 1;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            overflow-y: auto;
-        }
-
-        .panel-section {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .panel-label {
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-secondary);
-        }
-
-        .panel-content {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 16px;
-        }
-
-        /* --- Main Content Area --- */
-        .main-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            overflow-y: auto;
-            padding: 40px;
-        }
-
-        .view-section {
-            display: none;
-            flex-direction: column;
-            gap: 32px;
-            max-width: 1200px;
-            width: 100%;
-            margin: 0 auto;
-        }
-
-        .view-section.active {
-            display: flex;
-        }
-
-        .section-header h2 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin-bottom: 6px;
-        }
-
-        .section-header p {
-            color: var(--text-secondary);
-            font-size: 1.05rem;
-        }
-
-        /* --- Grid & Cards Layout --- */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 32px;
-        }
-
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 28px;
-            backdrop-filter: blur(20px);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* --- Wordle Solver Specific Layouts --- */
-        .guess-row {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .letter-tile {
-            width: 54px;
-            height: 54px;
-            border: 2px solid #334155;
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            background-color: transparent;
-        }
-
-        .letter-tile.grey { background-color: var(--wordle-grey); border-color: var(--wordle-grey); color: #fff; }
-        .letter-tile.yellow { background-color: var(--wordle-yellow); border-color: var(--wordle-yellow); color: #fff; }
-        .letter-tile.green { background-color: var(--wordle-green); border-color: var(--wordle-green); color: #fff; }
-        .letter-tile.empty {
-            border: 2px dashed rgba(255, 255, 255, 0.15);
-            color: rgba(255, 255, 255, 0.2);
-            background-color: rgba(255, 255, 255, 0.01);
-        }
-
-        .wordle-history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-        }
-
-        .wordle-history-table th, .wordle-history-table td {
-            padding: 10px 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .wordle-history-table th {
-            color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .wordle-grid-mini {
-            display: flex;
-            gap: 4px;
-        }
-
-        .mini-tile {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #fff;
-        }
-
-        /* --- Candidates List Grid --- */
-        .candidates-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 10px;
-            max-height: 380px;
-            overflow-y: auto;
-            padding-right: 8px;
-        }
-
-        .candidate-badge {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 8px;
-            text-align: center;
-            font-family: monospace;
-            font-size: 0.95rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .action-btn {
-            background: var(--accent-primary);
-            border: none;
-            border-radius: 8px;
-            color: #ffffff;
-            font-family: 'Outfit', sans-serif;
-            font-size: 1rem;
-            font-weight: 600;
-            padding: 12px 20px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .action-btn:hover {
-            opacity: 0.9;
-            box-shadow: 0 0 16px var(--accent-glow);
-            transform: translateY(-1px);
-        }
-
-        .action-btn.secondary {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .action-btn.secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        /* --- Scrollbar styling --- */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .input-box {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px 16px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 1rem;
-            outline: none;
-            width: 100%;
-        }
-
-        .input-box:focus {
-            border-color: var(--accent-primary);
-        }
-
-        /* Helper Classes */
-        .stat-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .stat-val {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -397,7 +16,6 @@
         <div class="sidebar-header">
             <!-- Return link back to hub -->
             <a href="../" class="hub-btn">
-                <span class="hub-btn-icon">🏠</span>
                 <span class="hub-btn-text">Return to Hub</span>
             </a>
             <h1 class="sidebar-title">NYT Games Companion</h1>
@@ -406,6 +24,7 @@
                     <option value="wordle">Wordle Solver</option>
                     <option value="connections">Connections Solver</option>
                     <option value="spellingbee">Spelling Bee Helper</option>
+                    <option value="strands">Strands Finder</option>
                 </select>
             </div>
         </div>
@@ -414,14 +33,14 @@
             <!-- Wordle Panel Section -->
             <div id="wordle-panel" class="panel-section">
                 <span class="panel-label">Algorithm Constraints</span>
-                <div class="panel-content" style="display: flex; flex-direction: column; gap: 12px;">
+                <div class="panel-content" style="display: flex; flex-direction: column; gap: 10px;">
                     <div class="stat-flex">
                         <span>Original Lexicon:</span>
-                        <span id="stat-total-words" class="stat-val">14,855</span>
+                        <span id="stat-total-words" class="stat-val">0</span>
                     </div>
                     <div class="stat-flex">
                         <span>Remaining Candidates:</span>
-                        <span id="stat-cands-left" class="stat-val" style="color: var(--wordle-green);">14,855</span>
+                        <span id="stat-cands-left" class="stat-val" style="color: var(--wordle-green);">0</span>
                     </div>
                     <div class="stat-flex" style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 4px;">
                         <span>Current Round:</span>
@@ -434,7 +53,7 @@
             <div id="connections-panel" class="panel-section" style="display: none;">
                 <span class="panel-label">Connections Options</span>
                 <div class="panel-content">
-                    <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">
+                    <p style="color: var(--text-secondary); line-height: 1.5;">
                         Group words into categories of four containing common ties.
                     </p>
                 </div>
@@ -443,10 +62,36 @@
             <!-- Spelling Bee Panel Section -->
             <div id="spellingbee-panel" class="panel-section" style="display: none;">
                 <span class="panel-label">Honeycomb Config</span>
-                <div class="panel-content">
-                    <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">
+                <div class="panel-content" style="display: flex; flex-direction: column; gap: 10px;">
+                    <p style="color: var(--text-secondary); line-height: 1.5;">
                         Form words of four or more letters containing the center honeycomb letter.
                     </p>
+                    <div class="stat-flex" style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 4px;">
+                        <span>Words Found:</span>
+                        <span id="sb-stat-words" class="stat-val">0</span>
+                    </div>
+                    <div class="stat-flex">
+                        <span>Pangrams:</span>
+                        <span id="sb-stat-pangrams" class="stat-val" style="color: var(--accent-primary);">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strands Panel Section -->
+            <div id="strands-panel" class="panel-section" style="display: none;">
+                <span class="panel-label">Grid Scan</span>
+                <div class="panel-content" style="display: flex; flex-direction: column; gap: 10px;">
+                    <p style="color: var(--text-secondary); line-height: 1.5;">
+                        Words of four or more letters traced through touching cells, each cell used once.
+                    </p>
+                    <div class="stat-flex" style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 4px;">
+                        <span>Likely Words:</span>
+                        <span id="strands-stat-likely" class="stat-val" style="color: var(--accent-primary);">0</span>
+                    </div>
+                    <div class="stat-flex">
+                        <span>Long Shots:</span>
+                        <span id="strands-stat-longshots" class="stat-val">0</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -464,12 +109,12 @@
             <div class="dashboard-grid">
                 <!-- Left Hand Card: Input & Guesses -->
                 <div class="card">
-                    <h3 style="font-family: 'Outfit'; font-size: 1.3rem;">Log a New Guess</h3>
+                    <h3 class="card-title">Log a New Guess</h3>
                     
                     <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
                         <div style="display: flex; gap: 12px; align-items: center; width: 100%;">
-                            <input type="text" id="wordle-input" class="input-box" placeholder="Type 5-letter word..." maxlength="5" style="text-transform: uppercase; font-family: monospace; font-size: 1.15rem; letter-spacing: 0.1em; flex: 1.2;">
-                            <input type="text" id="feedback-input" class="input-box" placeholder="Feedback (0,1,2)..." maxlength="5" style="font-family: monospace; font-size: 1.15rem; letter-spacing: 0.15em; flex: 0.8;" disabled>
+                            <input type="text" id="wordle-input" class="input-box" placeholder="guess..." maxlength="5" style="text-transform: uppercase; flex: 1.2;">
+                            <input type="text" id="feedback-input" class="input-box" placeholder="0/1/2..." maxlength="5" style="flex: 0.8;" disabled>
                         </div>
                         <button class="action-btn" onclick="submitGuess()">Submit Guess</button>
                     </div>
@@ -485,7 +130,7 @@
                             <div class="letter-tile empty" onclick="cycleTileColor(4)">•</div>
                         </div>
                         <p id="wordle-helper-text" style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4; margin-top: -8px;">
-                            💡 <strong>How to use:</strong> Type a 5-letter guess word above. Once typed, click individual letter tiles to cycle colors matching Wordle's clues (Grey ➔ Yellow ➔ Green), or type the feedback numbers (0=Grey, 1=Yellow, 2=Green) in the feedback box.
+                            <span style="color: var(--accent-primary);">&gt;</span> Type a 5-letter guess word above. Once typed, click individual letter tiles to cycle colors matching Wordle's clues (Grey ➔ Yellow ➔ Green), or type the feedback numbers (0=Grey, 1=Yellow, 2=Green) in the feedback box.
                         </p>
                     </div>
 
@@ -507,15 +152,15 @@
                     </div>
 
                     <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 12px;">
-                        <button class="action-btn secondary" onclick="resetWordle()">Reset Solver</button>
+                        <button class="action-btn secondary" onclick="initWordle()">Reset Solver</button>
                     </div>
                 </div>
 
                 <!-- Right Hand Card: Remaining Candidates & Recommendations -->
                 <div class="card">
                     <div>
-                        <h3 style="font-family: 'Outfit'; font-size: 1.3rem; margin-bottom: 4px;">Top Recommended Next Guesses</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;">Based on maximizing information entropy and letter distribution among remaining words.</p>
+                        <h3 class="card-title">Top Recommended Next Guesses</h3>
+                        <p class="card-desc">Possible answers ranked by expected information (bits); ties go to the more common word.</p>
                     </div>
                     
                     <div id="recommendations-container" style="display: flex; flex-direction: column; gap: 10px;">
@@ -524,8 +169,8 @@
 
                     <div style="border-top: 1px solid var(--border-color); padding-top: 24px; margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
                         <div>
-                            <h3 style="font-family: 'Outfit'; font-size: 1.3rem; margin-bottom: 4px;">Matching Candidates</h3>
-                            <p style="color: var(--text-secondary); font-size: 0.85rem;" id="candidates-count-label">Displaying first 100 matching words.</p>
+                            <h3 class="card-title">Matching Candidates</h3>
+                            <p class="card-desc" id="candidates-count-label">Displaying first 100 matching words.</p>
                         </div>
                         <div id="candidates-grid" class="candidates-container">
                             <!-- Dynamic word badges go here -->
@@ -541,10 +186,10 @@
                 <h2>Connections Solver</h2>
                 <p>An automated grid analysis tool grouping words into thematic four-word segments based on semantic matching.</p>
             </div>
-            <div class="card" style="align-items: center; justify-content: center; min-height: 400px;">
-                <span style="font-size: 3rem;">🔮</span>
-                <h3 style="font-family: 'Outfit'; margin-top: 16px;">Connections Solver Under Construction</h3>
-                <p style="color: var(--text-secondary); max-width: 400px; text-align: center; margin-top: 8px; font-size: 0.95rem; line-height: 1.5;">
+            <div class="card placeholder-card">
+                <span class="status-tag">WIP</span>
+                <h3 class="card-title">Connections Solver Under Construction</h3>
+                <p>
                     This feature is currently being designed and will be deployed in a future release of the NYT Games portal.
                 </p>
             </div>
@@ -556,415 +201,69 @@
                 <h2>Spelling Bee Helper</h2>
                 <p>Construct words of four or more letters using a central hub letter and surrounding honeycomb characters.</p>
             </div>
-            <div class="card" style="align-items: center; justify-content: center; min-height: 400px;">
-                <span style="font-size: 3rem;">🐝</span>
-                <h3 style="font-family: 'Outfit'; margin-top: 16px;">Spelling Bee Helper Under Construction</h3>
-                <p style="color: var(--text-secondary); max-width: 400px; text-align: center; margin-top: 8px; font-size: 0.95rem; line-height: 1.5;">
-                    This feature is currently being designed and will be deployed in a future release of the NYT Games portal.
-                </p>
+            <div class="card">
+                <h3 class="card-title">Hive Letters</h3>
+                <div style="display: flex; gap: 12px; width: 100%;">
+                    <input type="text" id="sb-center" class="input-box" placeholder="center" maxlength="1" aria-label="Center letter" style="text-transform: uppercase; flex: 0.4;">
+                    <input type="text" id="sb-outer" class="input-box" placeholder="6 outer letters" maxlength="6" aria-label="Six outer letters" style="text-transform: uppercase; flex: 1.6;">
+                </div>
+                <p id="sb-helper-text" style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;"></p>
+            </div>
+            <div class="card">
+                <div>
+                    <h3 class="card-title">Pangrams</h3>
+                    <p class="card-desc">Words using all 7 letters.</p>
+                </div>
+                <div id="sb-pangrams" class="candidates-container" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));"></div>
+                <div style="border-top: 1px solid var(--border-color); padding-top: 24px;">
+                    <h3 class="card-title">Likely Words</h3>
+                    <p class="card-desc">Words in common use, most common first. NYT's list is hand-picked, so some will be rejected.</p>
+                </div>
+                <div id="sb-likely" class="candidates-container" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));"></div>
+                <div style="border-top: 1px solid var(--border-color); padding-top: 24px;">
+                    <h3 class="card-title">Long Shots</h3>
+                    <p class="card-desc">Valid dictionary words with no recorded usage. Occasionally accepted.</p>
+                </div>
+                <div id="sb-longshots" class="candidates-container" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));"></div>
+            </div>
+        </section>
+
+        <!-- Strands View Section -->
+        <section id="strands-view" class="view-section">
+            <div class="section-header">
+                <h2>Strands Finder</h2>
+                <p>Finds every word hidden in the grid, whatever the theme. Brighter cells have more words running through them; dim cells have few options, so their words are the likely theme words.</p>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3 class="card-title">Grid Letters</h3>
+                    <textarea id="strands-input" class="input-box" rows="8" placeholder="8 rows of 6 letters" aria-label="Strands grid, 8 rows of 6 letters" style="text-transform: uppercase; resize: vertical;"></textarea>
+                    <p id="strands-helper-text" style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;"></p>
+                    <div id="strands-grid" style="display: grid; grid-template-columns: repeat(6, 54px); gap: 6px;"></div>
+                </div>
+                <div class="card">
+                    <div>
+                        <h3 class="card-title">Likely Words</h3>
+                        <p class="card-desc">Longest first. Click a word to trace it; click a cell to list only words through it.</p>
+                    </div>
+                    <div id="strands-likely" class="candidates-container" style="grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));"></div>
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 24px;">
+                        <h3 class="card-title">Long Shots</h3>
+                        <p class="card-desc">Valid dictionary words with no recorded usage. Rarely theme words, but they still earn hints.</p>
+                    </div>
+                    <div id="strands-longshots" class="candidates-container" style="grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));"></div>
+                </div>
             </div>
         </section>
     </main>
 
-    <!-- --- Import Words Database --- -->
-    <script src="Wordle/words_data.js"></script>
-
-    <!-- --- Core Application JavaScript Logic --- -->
-    <script>
-        // Game active state
-        let currentGame = "wordle";
-        let activeTabId = "wordle-view";
-
-        // Wordle Solver state
-        let candidates = [];
-        let loggedGuesses = []; // list of { word, feedback }
-        let currentFeedbackCodes = [0, 0, 0, 0, 0]; // 0=grey, 1=yellow, 2=green for the current preview tiles
-
-        // Switch games dynamically
-        function switchGame(gameId) {
-            currentGame = gameId;
-            
-            // Toggle sidebar panels
-            document.getElementById("wordle-panel").style.display = gameId === "wordle" ? "flex" : "none";
-            document.getElementById("connections-panel").style.display = gameId === "connections" ? "flex" : "none";
-            document.getElementById("spellingbee-panel").style.display = gameId === "spellingbee" ? "flex" : "none";
-            
-            // Toggle viewport tabs
-            document.getElementById("wordle-view").className = `view-section ${gameId === "wordle" ? 'active' : ''}`;
-            document.getElementById("connections-view").className = `view-section ${gameId === "connections" ? 'active' : ''}`;
-            document.getElementById("spellingbee-view").className = `view-section ${gameId === "spellingbee" ? 'active' : ''}`;
-            
-            // Switch theme variables
-            const root = document.documentElement;
-            if (gameId === "connections") {
-                root.style.setProperty('--accent-primary', '#8b5cf6'); // Purple
-                root.style.setProperty('--accent-glow', 'rgba(139, 92, 246, 0.15)');
-                document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.25) 0%, rgba(11, 15, 25, 0) 75%)';
-            } else if (gameId === "spellingbee") {
-                root.style.setProperty('--accent-primary', '#fbbf24'); // Yellow/Gold
-                root.style.setProperty('--accent-glow', 'rgba(251, 191, 36, 0.15)');
-                document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.2) 0%, rgba(11, 15, 25, 0) 75%)';
-            } else {
-                root.style.setProperty('--accent-primary', 'var(--wordle-green)'); // Green
-                root.style.setProperty('--accent-glow', 'rgba(106, 170, 100, 0.15)');
-                document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(106, 170, 100, 0.25) 0%, rgba(11, 15, 25, 0) 75%)';
-            }
-        }
-
-        // --- Wordle Solver Engine ---
-        
-        function initWordle() {
-            // Load words from words_data.js
-            candidates = [...WORDLE_WORDS];
-            loggedGuesses = [];
-            currentFeedbackCodes = [0, 0, 0, 0, 0];
-            
-            document.getElementById("stat-total-words").innerText = WORDLE_WORDS.length.toLocaleString();
-            document.getElementById("wordle-input").value = "";
-            
-            const fbInput = document.getElementById("feedback-input");
-            fbInput.value = "";
-            fbInput.disabled = true;
-            
-            // Sync preview row visuals
-            updatePreviewUI();
-            
-            updateWordleUI();
-        }
-
-        function resetWordle() {
-            initWordle();
-        }
-
-        // Dedicated preview UI synchronizer to keep input, feedback, and tiles perfectly in sync
-        function updatePreviewUI() {
-            const wordInput = document.getElementById("wordle-input");
-            const fbInput = document.getElementById("feedback-input");
-            const previewRow = document.getElementById("current-guess-preview");
-            const tiles = previewRow.querySelectorAll(".letter-tile");
-            
-            const word = wordInput.value.toLowerCase().replace(/[^a-z]/g, "");
-            
-            // Sync word-input value filtered
-            wordInput.value = word.substring(0, 5);
-            
-            // Adjust feedback input value to match word length
-            let fbVal = fbInput.value.replace(/[^0-2]/g, "");
-            if (fbVal.length > word.length) {
-                fbVal = fbVal.substring(0, word.length);
-            }
-            if (word.length > 0 && fbVal.length < word.length) {
-                // If they have typed letters, pad the feedback with '0's for the rest of the letters
-                fbVal = fbVal.padEnd(word.length, "0");
-            }
-            fbInput.value = fbVal;
-            
-            // Sync feedback codes to the first 5 elements
-            for (let i = 0; i < 5; i++) {
-                if (i < fbVal.length) {
-                    currentFeedbackCodes[i] = parseInt(fbVal[i]);
-                } else {
-                    currentFeedbackCodes[i] = 0;
-                }
-            }
-            
-            // Draw letter tile visual states
-            for (let i = 0; i < 5; i++) {
-                const tile = tiles[i];
-                if (i < word.length) {
-                    tile.innerText = word[i];
-                    tile.classList.remove("empty");
-                    applyTileClass(tile, currentFeedbackCodes[i]);
-                } else {
-                    tile.innerText = "•"; // Placeholder dot
-                    tile.className = "letter-tile empty";
-                }
-            }
-            
-            // Enable/disable feedback textbox based on word typing state
-            if (word.length > 0) {
-                fbInput.disabled = false;
-            } else {
-                fbInput.disabled = true;
-                fbInput.value = "";
-            }
-        }
-
-        // Handles keying letter preview
-        document.getElementById("wordle-input").addEventListener("input", function(e) {
-            updatePreviewUI();
-        });
-
-        // Handles direct feedback numeric input
-        document.getElementById("feedback-input").addEventListener("input", function(e) {
-            updatePreviewUI();
-        });
-
-        function applyTileClass(tile, feedbackCode) {
-            tile.className = "letter-tile";
-            if (feedbackCode === 0) tile.classList.add("grey");
-            else if (feedbackCode === 1) tile.classList.add("yellow");
-            else if (feedbackCode === 2) tile.classList.add("green");
-        }
-
-        function cycleTileColor(index) {
-            const wordInput = document.getElementById("wordle-input");
-            const word = wordInput.value.toLowerCase().replace(/[^a-z]/g, "");
-            
-            if (index >= word.length) {
-                // Focus the guess input to prompt the user to type a letter first
-                wordInput.focus();
-                return;
-            }
-            
-            // cycle: 0 -> 1 -> 2 -> 0
-            currentFeedbackCodes[index] = (currentFeedbackCodes[index] + 1) % 3;
-            
-            // Synchronize feedback-input value
-            const fbInput = document.getElementById("feedback-input");
-            let val = "";
-            for (let i = 0; i < word.length; i++) {
-                val += currentFeedbackCodes[i].toString();
-            }
-            fbInput.value = val;
-            
-            updatePreviewUI();
-        }
-
-        function submitGuess() {
-            const input = document.getElementById("wordle-input");
-            const word = input.value.toLowerCase().trim();
-            const fbInput = document.getElementById("feedback-input");
-            const feedbackString = fbInput.value.trim();
-            
-            if (word.length !== 5) {
-                alert("Please enter a valid 5-letter word.");
-                return;
-            }
-            if (feedbackString.length !== 5) {
-                alert("Please enter a 5-digit feedback code (0=grey, 1=yellow, 2=green) in the Feedback box or click the letter tiles above.");
-                return;
-            }
-            
-            loggedGuesses.push({
-                word: word,
-                feedback: feedbackString
-            });
-            
-            // Run candidates filtration
-            candidates = filterCandidates(candidates, word, feedbackString);
-            
-            // Reset inputs
-            input.value = "";
-            fbInput.value = "";
-            fbInput.disabled = true;
-            currentFeedbackCodes = [0, 0, 0, 0, 0];
-            
-            // Refresh preview elements and calculations
-            updatePreviewUI();
-            updateWordleUI();
-        }
-
-        function deleteGuess(index) {
-            loggedGuesses.splice(index, 1);
-            
-            // Recompute candidates from original list based on remaining guesses
-            candidates = [...WORDLE_WORDS];
-            loggedGuesses.forEach(g => {
-                candidates = filterCandidates(candidates, g.word, g.feedback);
-            });
-            
-            updateWordleUI();
-        }
-
-        // Core filtration algorithm (ported exactly from words.py)
-        function filterCandidates(wordsList, guess, feedback) {
-            return wordsList.filter(w => {
-                let ok = true;
-                for (let i = 0; i < 5; i++) {
-                    const g = guess[i];
-                    const fb = feedback[i];
-                    
-                    if (fb === "2") { // green
-                        if (w[i] !== g) {
-                            ok = false;
-                            break;
-                        }
-                    } else if (fb === "1") { // yellow
-                        if (w[i] === g || !w.includes(g)) {
-                            ok = false;
-                            break;
-                        }
-                    } else if (fb === "0") { // grey
-                        // account for duplicates in guess: count occurrences marked as yellow/green
-                        let nonGrey = 0;
-                        for (let j = 0; j < 5; j++) {
-                            if (guess[j] === g && (feedback[j] === "1" || feedback[j] === "2")) {
-                                nonGrey++;
-                            }
-                        }
-                        
-                        // Count occurrences in candidates word
-                        let letterCount = 0;
-                        for (let j = 0; j < 5; j++) {
-                            if (w[j] === g) letterCount++;
-                        }
-                        
-                        if (letterCount !== nonGrey) {
-                            ok = false;
-                            break;
-                        }
-                    }
-                }
-                return ok;
-            });
-        }
-
-        // Wordle Heuristics & Information Entropy Recommendations
-        function getGuidingRecommendations() {
-            if (candidates.length === 0) return [];
-            
-            // 1. Calculate letter distributions of the remaining matching candidates pool
-            const letterFreqs = {};
-            candidates.forEach(w => {
-                // Count unique letters in the word to prioritize word variety
-                const uniques = new Set(w.split(""));
-                uniques.forEach(c => {
-                    letterFreqs[c] = (letterFreqs[c] || 0) + 1;
-                });
-            });
-            
-            // 2. Score every remaining word in the lexicon based on unique letter distributions
-            // Priority is placed on candidates, but we also search all dictionary words if candidates are high
-            const pool = candidates.length <= 10 ? candidates : WORDLE_WORDS;
-            const scoredList = pool.map(w => {
-                let score = 0;
-                const uniques = new Set(w.split(""));
-                uniques.forEach(c => {
-                    score += letterFreqs[c] || 0;
-                });
-                return { word: w, score: score };
-            });
-            
-            // Sort by score descending
-            scoredList.sort((a, b) => b.score - a.score);
-            
-            // Filter unique words and return top 5 recommendations
-            const results = [];
-            const seen = new Set();
-            for (let i = 0; i < scoredList.length; i++) {
-                if (results.length >= 5) break;
-                if (!seen.has(scoredList[i].word)) {
-                    seen.add(scoredList[i].word);
-                    
-                    // check if the recommended word is a matching candidate or an elimination word
-                    const isCandidate = candidates.includes(scoredList[i].word);
-                    results.push({
-                        word: scoredList[i].word,
-                        score: scoredList[i].score,
-                        isCandidate: isCandidate
-                    });
-                }
-            }
-            return results;
-        }
-
-        // Redraw page layouts
-        function updateWordleUI() {
-            // Update sidebar stats
-            document.getElementById("stat-cands-left").innerText = candidates.length.toLocaleString();
-            document.getElementById("stat-current-round").innerText = loggedGuesses.length + 1;
-            
-            // Render progression log table
-            const tbody = document.getElementById("wordle-log-tbody");
-            tbody.innerHTML = "";
-            loggedGuesses.forEach((g, index) => {
-                const tr = document.createElement("tr");
-                
-                let miniGridHTML = `<div class="wordle-grid-mini">`;
-                for (let i = 0; i < 5; i++) {
-                    const code = g.feedback[i];
-                    let colorClass = 'grey';
-                    if (code === '1') colorClass = 'yellow';
-                    else if (code === '2') colorClass = 'green';
-                    miniGridHTML += `<div class="mini-tile ${colorClass}">${g.word[i]}</div>`;
-                }
-                miniGridHTML += `</div>`;
-                
-                tr.innerHTML = `
-                    <td style="font-weight: 700;">#${index + 1}</td>
-                    <td style="text-transform: uppercase; font-family: monospace; font-size: 1.1rem; letter-spacing: 0.05em; font-weight: 600;">${g.word}</td>
-                    <td>${miniGridHTML}</td>
-                    <td style="text-align: right;">
-                        <button class="action-btn secondary" style="padding: 4px 10px; font-size: 0.8rem; border-radius: 4px;" onclick="deleteGuess(${index})">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-            
-            // Render Recommended next guesses
-            const recContainer = document.getElementById("recommendations-container");
-            recContainer.innerHTML = "";
-            const recommendations = getGuidingRecommendations();
-            
-            if (recommendations.length > 0) {
-                recommendations.forEach((rec, idx) => {
-                    const row = document.createElement("div");
-                    row.className = "stat-flex";
-                    row.style.background = "rgba(255,255,255,0.02)";
-                    row.style.border = "1px solid var(--border-color)";
-                    row.style.borderRadius = "8px";
-                    row.style.padding = "10px 16px";
-                    
-                    const badgeClass = rec.isCandidate ? 'green' : 'grey';
-                    const badgeLabel = rec.isCandidate ? 'Candidate' : 'Eliminator';
-                    const badgeColor = rec.isCandidate ? 'var(--wordle-green)' : 'var(--text-secondary)';
-                    
-                    row.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <span style="font-weight: 700; color: var(--text-secondary);">#${idx + 1}</span>
-                            <span style="text-transform: uppercase; font-family: monospace; font-size: 1.15rem; font-weight: 700; letter-spacing: 0.1em; color: #fff;">${rec.word}</span>
-                            <span style="font-size: 0.75rem; background: ${badgeColor}; color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">${badgeLabel}</span>
-                        </div>
-                        <span style="font-family: monospace; color: var(--accent-primary); font-weight: 700;">Score: ${rec.score}</span>
-                    `;
-                    recContainer.appendChild(row);
-                });
-            } else {
-                recContainer.innerHTML = `
-                    <div style="text-align: center; padding: 12px; color: var(--text-secondary); font-size: 0.9rem;">
-                        ⚠️ No suggestions available - check constraints.
-                    </div>
-                `;
-            }
-            
-            // Render Matching Candidates grid
-            const candsGrid = document.getElementById("candidates-grid");
-            candsGrid.innerHTML = "";
-            const maxCands = Math.min(candidates.length, 100);
-            
-            document.getElementById("candidates-count-label").innerText = `Displaying first ${maxCands} of ${candidates.length} matching words.`;
-            
-            if (candidates.length > 0) {
-                for (let i = 0; i < maxCands; i++) {
-                    const badge = document.createElement("div");
-                    badge.className = "candidate-badge";
-                    badge.innerText = candidates[i];
-                    candsGrid.appendChild(badge);
-                }
-            } else {
-                candsGrid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--text-secondary); font-size: 0.95rem;">
-                        No candidates match the specified guess criteria. Try deleting a guess or resetting the solver.
-                    </div>
-                `;
-            }
-        }
-
-        // --- Initialization ---
-        window.addEventListener("DOMContentLoaded", () => {
-            initWordle();
-        });
-    </script>
+    <!-- Word banks (generated by build_words.py), then shared code, then one file per game -->
+    <script src="wordle/words_data.js"></script>
+    <script src="spelling-bee/words_data.js"></script>
+    <script src="strands/words_data.js"></script>
+    <script src="app.js"></script>
+    <script src="wordle/wordle.js"></script>
+    <script src="spelling-bee/spellingbee.js"></script>
+    <script src="strands/strands.js"></script>
 </body>
 </html>
