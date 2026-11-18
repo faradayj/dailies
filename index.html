@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYT Games Companion</title>
+    <title>Dailies</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
             <a href="../" class="hub-btn">
                 <span class="hub-btn-text">Return to Hub</span>
             </a>
-            <h1 class="sidebar-title">NYT Games Companion</h1>
+            <h1 class="sidebar-title">Dailies</h1>
             <div class="game-select-container">
                 <select id="game-selector" class="game-select" onchange="switchGame(this.value)">
                     <option value="wordle">Wordle Solver</option>
@@ -160,7 +160,7 @@
                 <div class="card">
                     <div>
                         <h3 class="card-title">Top Recommended Next Guesses</h3>
-                        <p class="card-desc">Possible answers ranked by expected information (bits); ties go to the more common word.</p>
+                        <p class="card-desc">Possible answers ranked by expected information (bits), with a bonus of up to 1 for common words.</p>
                     </div>
                     
                     <div id="recommendations-container" style="display: flex; flex-direction: column; gap: 10px;">
@@ -190,7 +190,7 @@
                 <span class="status-tag">WIP</span>
                 <h3 class="card-title">Connections Solver Under Construction</h3>
                 <p>
-                    This feature is currently being designed and will be deployed in a future release of the NYT Games portal.
+                    This feature is currently being designed and will be deployed in a future release.
                 </p>
             </div>
         </section>
@@ -247,6 +247,11 @@
                         <p class="card-desc">Longest first. Click a word to trace it; click a cell to list only words through it.</p>
                     </div>
                     <div id="strands-likely" class="candidates-container" style="grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));"></div>
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 24px;">
+                        <h3 class="card-title">Possible Spangrams</h3>
+                        <p class="card-desc">One word, or two found words joined, reaching opposite edges. Guesses only: top 100, most common first. Click a cell to narrow them.</p>
+                    </div>
+                    <div id="strands-spangrams" class="candidates-container" style="grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));"></div>
                     <div style="border-top: 1px solid var(--border-color); padding-top: 24px;">
                         <h3 class="card-title">Long Shots</h3>
                         <p class="card-desc">Valid dictionary words with no recorded usage. Rarely theme words, but they still earn hints.</p>

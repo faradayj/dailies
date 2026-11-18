@@ -39,20 +39,29 @@ function filterCandidates(wordsList, guess, feedback) {
     return wordsList.filter(w => getFeedback(guess, w) === feedback);
 }
 
-// Top 5 possible answers by expected information (Shannon entropy, bits)
+// How plausible each word is as a real answer: about 1 for common words, falling to about 0 for obscure ones.
+// Answers are everyday words, so the bank's usage order is the only evidence needed.
+const WORDLE_MIDPOINT = 3500; // usage rank where plausibility is 0.5
+const WORDLE_PLAUSIBILITY = new Map(
+    WORDLE_WORDS.map((w, rank) => [w, 1 / (1 + Math.exp((rank - WORDLE_MIDPOINT) / 500))]));
+
+// Top 5 possible answers. Score = expected information in bits (Shannon entropy over the remaining
+// candidates, each counted by its plausibility) + the guess's own plausibility, so a common word
+// beats an obscure one that splits the field equally well.
 function getGuidingRecommendations() {
+    const total = candidates.reduce((sum, w) => sum + WORDLE_PLAUSIBILITY.get(w), 0);
     // shortcut: only the 600 most common candidates are scored as guesses (~0.8s on round 1), raise if that feels fast enough
     return candidates.slice(0, 600).map(guess => {
         const buckets = {};
         for (const w of candidates) {
             const p = getFeedback(guess, w);
-            buckets[p] = (buckets[p] || 0) + 1;
+            buckets[p] = (buckets[p] || 0) + WORDLE_PLAUSIBILITY.get(w);
         }
         let bits = 0;
-        for (const n of Object.values(buckets)) {
-            bits -= (n / candidates.length) * Math.log2(n / candidates.length);
+        for (const weight of Object.values(buckets)) {
+            bits -= (weight / total) * Math.log2(weight / total);
         }
-        return { word: guess, score: bits };
+        return { word: guess, score: bits + WORDLE_PLAUSIBILITY.get(guess) };
     }).sort((a, b) => b.score - a.score).slice(0, 5); // stable sort: ties keep the more common word first
 }
 

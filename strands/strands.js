@@ -6,7 +6,8 @@ let strandsRank = null;       // word -> index in STRANDS_WORDS (lower = more co
 let strandsPrefixes = null;   // every proper prefix of every word, to cut dead-end paths early
 let strandsBoard = "";
 let strandsFound = new Map(); // word -> list of paths (each path = list of cell indexes)
-let strandsSelectedWord = null;
+let strandsSpangrams = new Map(); // spangram guess ("brass band") -> [path], best guess first
+let strandsSelectedWord = null;   // a key of strandsFound or strandsSpangrams
 let strandsSelectedCell = null;
 
 // Every bank word traceable on the board through touching cells (8 directions), no cell used twice
@@ -19,6 +20,8 @@ function findStrandsWords(board) {
         }
         console.assert(findStrandsWords("word".padEnd(48, "q")).has("word"));
         console.assert(!findStrandsWords("noqqqq".padEnd(48, "q")).has("noon")); // would need to reuse cells
+        const fireworkColumn = [..."firework"].map(letter => letter + "qqqqq").join("");
+        console.assert(findStrandsSpangrams(findStrandsWords(fireworkColumn)).has("fire work"));
     }
     const found = new Map();
     const visit = (cell, prefix, path) => {
@@ -41,6 +44,41 @@ function findStrandsWords(board) {
     return found;
 }
 
+// Spangram guesses: the spangram reaches two opposite edges and is often two words joined ("brass band"),
+// which no dictionary lists. So: every likely word, or pair of likely words where the second starts next to
+// the end of the first without sharing a cell, whose path reaches opposite edges.
+// Returns Map of label -> [path], best guess first (the less common word of a pair decides its place).
+function findStrandsSpangrams(found) {
+    const reachesOppositeEdges = path =>
+        (path.some(c => c % 6 === 0) && path.some(c => c % 6 === 5)) || (path.some(c => c < 6) && path.some(c => c >= 42));
+    const touching = (a, b) => Math.abs(Math.floor(a / 6) - Math.floor(b / 6)) <= 1 && Math.abs(a % 6 - b % 6) <= 1;
+
+    const pieces = []; // one per path of each likely word; `mask` has a bit set for every cell used
+    for (const [word, paths] of found) {
+        if (strandsRank.get(word) >= STRANDS_COMMON) continue;
+        for (const path of paths) {
+            pieces.push({ word, path, rank: strandsRank.get(word), mask: path.reduce((m, c) => m | (1n << BigInt(c)), 0n) });
+        }
+    }
+
+    const guesses = [];
+    for (const first of pieces) {
+        if (reachesOppositeEdges(first.path)) guesses.push({ label: first.word, path: first.path, rank: first.rank });
+        const end = first.path[first.path.length - 1];
+        for (const second of pieces) {
+            if (!touching(end, second.path[0]) || (first.mask & second.mask)) continue;
+            const path = first.path.concat(second.path);
+            if (reachesOppositeEdges(path)) {
+                guesses.push({ label: `${first.word} ${second.word}`, path, rank: Math.max(first.rank, second.rank) });
+            }
+        }
+    }
+    guesses.sort((a, b) => a.rank - b.rank);
+    const byLabel = new Map();
+    for (const g of guesses) if (!byLabel.has(g.label)) byLabel.set(g.label, [g.path]);
+    return byLabel;
+}
+
 // Re-read the textarea and search again
 function updateStrandsBoard() {
     strandsBoard = document.getElementById("strands-input").value.toLowerCase().replace(/[^a-z]/g, "");
@@ -48,6 +86,7 @@ function updateStrandsBoard() {
     document.getElementById("strands-helper-text").innerText =
         ready ? "" : `Enter all 48 letters (8 rows of 6). ${strandsBoard.length} so far.`;
     strandsFound = ready ? findStrandsWords(strandsBoard) : new Map();
+    strandsSpangrams = ready ? findStrandsSpangrams(strandsFound) : new Map();
     strandsSelectedWord = null;
     strandsSelectedCell = null;
     renderStrands();
@@ -64,7 +103,8 @@ function renderStrands() {
         if (isLikely(word)) cellsOf.get(word).forEach(cell => heat[cell]++);
     }
     const maxHeat = Math.max(1, ...heat);
-    const tracedPath = strandsSelectedWord ? strandsFound.get(strandsSelectedWord)[0] : [];
+    const tracedPath = strandsSelectedWord
+        ? (strandsFound.get(strandsSelectedWord) || strandsSpangrams.get(strandsSelectedWord))[0] : [];
 
     const grid = document.getElementById("strands-grid");
     grid.innerHTML = "";
@@ -97,6 +137,10 @@ function renderStrands() {
     };
     renderWordBadges("strands-likely", likely, toggleWord, strandsSelectedWord);
     renderWordBadges("strands-longshots", longShots, toggleWord, strandsSelectedWord);
+    const spangrams = [...strandsSpangrams.keys()]
+        .filter(label => strandsSelectedCell === null || strandsSpangrams.get(label)[0].includes(strandsSelectedCell))
+        .slice(0, 100); // the list is guesses, best first; past 100 they are noise
+    renderWordBadges("strands-spangrams", spangrams, toggleWord, strandsSelectedWord);
     document.getElementById("strands-stat-likely").innerText = likely.length;
     document.getElementById("strands-stat-longshots").innerText = longShots.length;
 }
