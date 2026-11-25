@@ -1,0 +1,11 @@
+# Python bytecode caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary backups
+*.bak
+
+# System files
+.DS_Store
+Thumbs.db

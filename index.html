@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dailies</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- --- Sidebar --- -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <!-- Return link back to hub -->
+            <a href="../" class="hub-btn">
+                <span class="hub-btn-text">Return to Hub</span>
+            </a>
+            <h1 class="sidebar-title">Dailies</h1>
+            <div class="game-select-container">
+                <select id="game-selector" class="game-select" onchange="switchGame(this.value)">
+                    <option value="wordle">Wordle Solver</option>
+                    <option value="spellingbee">Spelling Bee Helper</option>
+                    <option value="strands">Strands Finder</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="sidebar-panel">
+            <!-- Wordle Panel Section -->
+            <div id="wordle-panel" class="panel-section active">
+                <span class="panel-label">Algorithm Constraints</span>
+                <div class="panel-content">
+                    <div class="stat-flex">
+                        <span>Original Lexicon:</span>
+                        <span id="stat-total-words" class="stat-val">0</span>
+                    </div>
+                    <div class="stat-flex">
+                        <span>Remaining Candidates:</span>
+                        <span id="stat-cands-left" class="stat-val" style="color: var(--wordle-green);">0</span>
+                    </div>
+                    <div class="stat-flex divider">
+                        <span>Current Round:</span>
+                        <span id="stat-current-round" class="stat-val">1</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spelling Bee Panel Section -->
+            <div id="spellingbee-panel" class="panel-section">
+                <span class="panel-label">Honeycomb Config</span>
+                <div class="panel-content">
+                    <p style="color: var(--text-secondary); line-height: 1.5;">
+                        Form words of four or more letters containing the center honeycomb letter.
+                    </p>
+                    <div class="stat-flex divider">
+                        <span>Words Found:</span>
+                        <span id="sb-stat-words" class="stat-val">0</span>
+                    </div>
+                    <div class="stat-flex">
+                        <span>Pangrams:</span>
+                        <span id="sb-stat-pangrams" class="stat-val" style="color: var(--accent-primary);">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strands Panel Section -->
+            <div id="strands-panel" class="panel-section">
+                <span class="panel-label">Grid Scan</span>
+                <div class="panel-content">
+                    <p style="color: var(--text-secondary); line-height: 1.5;">
+                        Words of four or more letters traced through touching cells, each cell used once.
+                    </p>
+                    <div class="stat-flex divider">
+                        <span>Likely Words:</span>
+                        <span id="strands-stat-likely" class="stat-val" style="color: var(--accent-primary);">0</span>
+                    </div>
+                    <div class="stat-flex">
+                        <span>Long Shots:</span>
+                        <span id="strands-stat-longshots" class="stat-val">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- --- Main Content View Area --- -->
+    <main class="main-content">
+        <!-- Wordle View Section -->
+        <section id="wordle-view" class="view-section active">
+            <div class="section-header">
+                <h2>Wordle Solver</h2>
+                <p>Enter your guesses and click individual tiles to cycle their colors (Grey ➔ Yellow ➔ Green) to match Wordle's feedback.</p>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Left Hand Card: Input & Guesses -->
+                <div class="card">
+                    <h3 class="card-title">Log a New Guess</h3>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+                        <div style="display: flex; gap: 12px; align-items: center; width: 100%;">
+                            <input type="text" id="wordle-input" class="input-box" placeholder="guess..." maxlength="5" style="text-transform: uppercase; flex: 1.2;">
+                            <input type="text" id="feedback-input" class="input-box" placeholder="0/1/2..." maxlength="5" style="flex: 0.8;" disabled>
+                        </div>
+                        <button class="action-btn" onclick="submitGuess()">Submit Guess</button>
+                    </div>
+
+                    <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 16px;">
+                        <h4 class="panel-label">Feedback Input Panel</h4>
+                        <!-- Interactive Guess Grid preview -->
+                        <div id="current-guess-preview" class="guess-row">
+                            <button type="button" class="letter-tile empty" aria-label="Letter 1 colour" onclick="cycleTileColor(0)">•</button>
+                            <button type="button" class="letter-tile empty" aria-label="Letter 2 colour" onclick="cycleTileColor(1)">•</button>
+                            <button type="button" class="letter-tile empty" aria-label="Letter 3 colour" onclick="cycleTileColor(2)">•</button>
+                            <button type="button" class="letter-tile empty" aria-label="Letter 4 colour" onclick="cycleTileColor(3)">•</button>
+                            <button type="button" class="letter-tile empty" aria-label="Letter 5 colour" onclick="cycleTileColor(4)">•</button>
+                        </div>
+                        <p id="wordle-helper-text" style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4; margin-top: -8px;">
+                            <span style="color: var(--accent-primary);">&gt;</span> Type a 5-letter guess word above. Once typed, click individual letter tiles to cycle colors matching Wordle's clues (Grey ➔ Yellow ➔ Green), or type the feedback numbers (0=Grey, 1=Yellow, 2=Green) in the feedback box.
+                        </p>
+                    </div>
+
+                    <div class="divider" style="margin-top: 12px;">
+                        <h4 class="panel-label" style="margin-bottom: 12px;">Round Progression Log</h4>
+                        <table class="wordle-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Round</th>
+                                    <th>Word</th>
+                                    <th>Feedback Map</th>
+                                    <th style="text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="wordle-log-tbody">
+                                <!-- Dynamic entries go here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 12px;">
+                        <button class="action-btn secondary" onclick="initWordle()">Reset Solver</button>
+                    </div>
+                </div>
+
+                <!-- Right Hand Card: Remaining Candidates & Recommendations -->
+                <div class="card">
+                    <div>
+                        <h3 class="card-title">Top Recommended Next Guesses</h3>
+                        <p class="card-desc">Possible answers ranked by expected information (bits), with a bonus of up to 1 for common words.</p>
+                    </div>
+                    
+                    <div id="recommendations-container" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Dynamic next guesses go here -->
+                    </div>
+
+                    <div class="divider" style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+                        <div>
+                            <h3 class="card-title">Matching Candidates</h3>
+                            <p class="card-desc" id="candidates-count-label">Displaying first 100 matching words.</p>
+                        </div>
+                        <div id="candidates-grid" class="candidates-container">
+                            <!-- Dynamic word badges go here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Spelling Bee View Section -->
+        <section id="spellingbee-view" class="view-section">
+            <div class="section-header">
+                <h2>Spelling Bee Helper</h2>
+                <p>Construct words of four or more letters using a central hub letter and surrounding honeycomb characters.</p>
+            </div>
+            <div class="card">
+                <h3 class="card-title">Hive Letters</h3>
+                <div style="display: flex; gap: 12px; width: 100%;">
+                    <input type="text" id="sb-center" class="input-box" placeholder="center" maxlength="1" aria-label="Center letter" style="text-transform: uppercase;">
+                    <input type="text" id="sb-outer" class="input-box" placeholder="6 outer letters" maxlength="6" aria-label="Six outer letters" style="text-transform: uppercase; flex: 1.6;">
+                </div>
+                <p id="sb-helper-text" style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;"></p>
+            </div>
+            <div class="card">
+                <div>
+                    <h3 class="card-title">Pangrams</h3>
+                    <p class="card-desc">Words using all 7 letters.</p>
+                </div>
+                <div id="sb-pangrams" class="candidates-container cols-150"></div>
+                <div class="divider">
+                    <h3 class="card-title">Likely Words</h3>
+                    <p class="card-desc">Words in common use, most common first. NYT's list is hand-picked, so some will be rejected.</p>
+                </div>
+                <div id="sb-likely" class="candidates-container cols-150"></div>
+                <div class="divider">
+                    <h3 class="card-title">Long Shots</h3>
+                    <p class="card-desc">Valid dictionary words with no recorded usage. Occasionally accepted.</p>
+                </div>
+                <div id="sb-longshots" class="candidates-container cols-150"></div>
+            </div>
+        </section>
+
+        <!-- Strands View Section -->
+        <section id="strands-view" class="view-section">
+            <div class="section-header">
+                <h2>Strands Finder</h2>
+                <p>Finds every word hidden in the grid, whatever the theme. Brighter cells have more words running through them; dim cells have few options, so their words are the likely theme words.</p>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3 class="card-title">Grid Letters</h3>
+                    <textarea id="strands-input" class="input-box" rows="8" placeholder="8 rows of 6 letters" aria-label="Strands grid, 8 rows of 6 letters" style="text-transform: uppercase; resize: vertical;"></textarea>
+                    <p id="strands-helper-text" style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;"></p>
+                    <div id="strands-grid"></div>
+                </div>
+                <div class="card">
+                    <div>
+                        <h3 class="card-title">Likely Words</h3>
+                        <p class="card-desc">Longest first. Click a word to trace it; click a cell to list only words through it.</p>
+                    </div>
+                    <div id="strands-likely" class="candidates-container cols-130"></div>
+                    <div class="divider">
+                        <h3 class="card-title">Possible Spangrams</h3>
+                        <p class="card-desc">One word, or two found words joined, reaching opposite edges. Guesses only: top 100, most common first. Click a cell to narrow them.</p>
+                    </div>
+                    <div id="strands-spangrams" class="candidates-container cols-170"></div>
+                    <div class="divider">
+                        <h3 class="card-title">Long Shots</h3>
+                        <p class="card-desc">Valid dictionary words with no recorded usage. Rarely theme words, but they still earn hints.</p>
+                    </div>
+                    <div id="strands-longshots" class="candidates-container cols-130"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Wordle word bank (generated by build_words.py; the other banks load on demand in app.js), then shared code, then one file per game -->
+    <script src="wordle/words_data.js"></script>
+    <script src="app.js"></script>
+    <script src="wordle/wordle.js"></script>
+    <script src="spelling-bee/spellingbee.js"></script>
+    <script src="strands/strands.js"></script>
+</body>
+</html>
